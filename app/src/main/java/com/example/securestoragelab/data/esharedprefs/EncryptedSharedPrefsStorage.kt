@@ -1,14 +1,28 @@
-package com.example.securestoragelab.data.sharedprefs
+package com.example.securestoragelab.data.esharedprefs
 
 import android.content.Context
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.example.securestoragelab.data.repository.KeyValueStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.content.edit
 
-class SharedPrefsStorage(context: Context) : KeyValueStorage {
+class EncryptedSharedPrefsStorage(context: Context) : KeyValueStorage {
 
-    private val prefs = context.getSharedPreferences("storage_bench", Context.MODE_PRIVATE)
+    private val prefs by lazy {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+
+        EncryptedSharedPreferences.create(
+            context,
+            "storage_bench_encrypted", // имя файла
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     override suspend fun putString(key: String, value: String) = withContext(Dispatchers.IO) {
         prefs.edit { putString(key, value) }
@@ -31,6 +45,6 @@ class SharedPrefsStorage(context: Context) : KeyValueStorage {
     }
 
     override suspend fun clearAll() = withContext(Dispatchers.IO) {
-        prefs.edit { clear() }
+        prefs.edit().clear().apply()
     }
 }
