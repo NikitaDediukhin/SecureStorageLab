@@ -45,6 +45,6 @@ class EncryptedSharedPrefsStorage(context: Context) : KeyValueStorage {
     }
 
     override suspend fun clearAll() = withContext(Dispatchers.IO) {
-        prefs.edit().clear().apply()
+        prefs.edit { clear() }
     }
 }

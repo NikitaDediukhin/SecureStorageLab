@@ -41,6 +41,8 @@ android {
 
 dependencies {
 
+    implementation(libs.androidx.sqlite)
+    implementation(libs.android.database.sqlcipher)
     implementation(libs.accompanist.flowlayout)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.security.crypto)

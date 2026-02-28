@@ -39,6 +39,16 @@ fun MainScreen(vm: MainViewModel) {
                 onClick = { vm.onMethodChange(StorageMethod.ENCRYPTED_SHARED_PREFS) },
                 label = { Text("EncSharedPrefs") }
             )
+            FilterChip(
+                selected = state.method == StorageMethod.SQLITE,
+                onClick = { vm.onMethodChange(StorageMethod.SQLITE) },
+                label = { Text("SQLite") }
+            )
+            FilterChip(
+                selected = state.method == StorageMethod.SQLCIPHER,
+                onClick = { vm.onMethodChange(StorageMethod.SQLCIPHER) },
+                label = { Text("SQLCipher") }
+            )
         }
 
         // Scenario switch

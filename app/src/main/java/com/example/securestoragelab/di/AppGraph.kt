@@ -7,6 +7,8 @@ import com.example.securestoragelab.data.provider.MutableStorageMethodProvider
 import com.example.securestoragelab.data.repository.KeyValueStorage
 import com.example.securestoragelab.data.repository.SecureStorageRepositoryImpl
 import com.example.securestoragelab.data.sharedprefs.SharedPrefsStorage
+import com.example.securestoragelab.data.sql.SQLiteStorage
+import com.example.securestoragelab.data.sql.SqlCipherStorage
 import com.example.securestoragelab.domain.model.StorageMethod
 import com.example.securestoragelab.domain.repository.SecureStorageRepository
 import com.example.securestoragelab.domain.usecase.ClearCredentialsUseCase
@@ -33,11 +35,19 @@ class AppGraph(context: Context) {
     private val spStorage = SharedPrefsStorage(appContext)
     private val dsStorage = DataStoreStorage(appContext)
     private val espStorage = EncryptedSharedPrefsStorage(appContext)
+    private val sqliteStorage = SQLiteStorage(appContext)
+
+    private val sqlCipherStorage =  SqlCipherStorage(
+        context = appContext,
+        passphrase = "lab-passphrase-123".toCharArray()
+    )
 
     private val storages = mapOf(
         StorageMethod.SHARED_PREFS to spStorage,
         StorageMethod.DATA_STORE to dsStorage,
-        StorageMethod.ENCRYPTED_SHARED_PREFS to espStorage
+        StorageMethod.ENCRYPTED_SHARED_PREFS to espStorage,
+        StorageMethod.SQLITE to sqliteStorage,
+        StorageMethod.SQLCIPHER to sqlCipherStorage
     )
     val secureRepo: SecureStorageRepository =
         SecureStorageRepositoryImpl(storages = storages, methodProvider = methodProvider)
