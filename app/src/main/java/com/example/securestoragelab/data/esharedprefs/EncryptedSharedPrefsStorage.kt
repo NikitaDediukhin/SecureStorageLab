@@ -25,7 +25,7 @@ class EncryptedSharedPrefsStorage(context: Context) : KeyValueStorage {
     }
 
     override suspend fun putString(key: String, value: String) = withContext(Dispatchers.IO) {
-        prefs.edit { putString(key, value) }
+        prefs.edit(commit = true) { putString(key, value) }
     }
 
     override suspend fun getString(key: String): String? = withContext(Dispatchers.IO) {
@@ -33,7 +33,7 @@ class EncryptedSharedPrefsStorage(context: Context) : KeyValueStorage {
     }
 
     override suspend fun putBoolean(key: String, value: Boolean) = withContext(Dispatchers.IO) {
-        prefs.edit { putBoolean(key, value) }
+        prefs.edit(commit = true) { putBoolean(key, value) }
     }
 
     override suspend fun getBoolean(key: String): Boolean? = withContext(Dispatchers.IO) {
@@ -41,10 +41,10 @@ class EncryptedSharedPrefsStorage(context: Context) : KeyValueStorage {
     }
 
     override suspend fun remove(key: String) = withContext(Dispatchers.IO) {
-        prefs.edit { remove(key) }
+        prefs.edit(commit = true) { remove(key) }
     }
 
     override suspend fun clearAll() = withContext(Dispatchers.IO) {
-        prefs.edit { clear() }
+        prefs.edit(commit = true) { clear() }
     }
 }

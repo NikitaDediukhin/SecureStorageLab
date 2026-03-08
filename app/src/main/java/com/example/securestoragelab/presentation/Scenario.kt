@@ -5,5 +5,5 @@ enum class Scenario {
     S2_TOKEN,
     S3_PROFILE,
     S4_SETTINGS,
-    S5_RESTORE
+    S5_LARGE_TEXT
 }

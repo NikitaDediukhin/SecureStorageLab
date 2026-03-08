@@ -90,4 +90,16 @@ class SecureStorageRepositoryImpl(
         kv().remove(Keys.THEME)
         kv().remove(Keys.BIOMETRICS)
     }
+
+    override suspend fun saveLargeText(key: String, value: String) {
+        kv().putString(key, value)
+    }
+
+    override suspend fun loadLargeText(key: String): String? {
+        return kv().getString(key)
+    }
+
+    override suspend fun clearLargeText(key: String) {
+        kv().remove(key)
+    }
 }

@@ -73,6 +73,11 @@ fun MainScreen(vm: MainViewModel) {
                 onClick = { vm.onScenarioChange(Scenario.S4_SETTINGS) },
                 label = { Text("S4") }
             )
+            FilterChip(
+                selected = state.scenario == Scenario.S5_LARGE_TEXT,
+                onClick = { vm.onScenarioChange(Scenario.S5_LARGE_TEXT) },
+                label = { Text("S5") }
+            )
         }
 
         // Fields by scenario
@@ -136,8 +141,8 @@ fun MainScreen(vm: MainViewModel) {
                 }
             }
 
-            Scenario.S5_RESTORE -> {
-                Text("S5 пока не реализован. Используй S1–S4.")
+            Scenario.S5_LARGE_TEXT -> {
+                OutlinedButton(onClick = vm::onBenchmarkClick) { Text("Benchmark") }
             }
         }
 

@@ -24,7 +24,6 @@ class SQLiteStorage(context: Context) : KeyValueStorage {
         }
 
         override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-            // для лабораторной достаточно так
             db.execSQL("DROP TABLE IF EXISTS kv")
             onCreate(db)
         }

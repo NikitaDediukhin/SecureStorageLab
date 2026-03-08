@@ -4,7 +4,6 @@ import android.content.Context
 import com.example.securestoragelab.data.datastore.DataStoreStorage
 import com.example.securestoragelab.data.esharedprefs.EncryptedSharedPrefsStorage
 import com.example.securestoragelab.data.provider.MutableStorageMethodProvider
-import com.example.securestoragelab.data.repository.KeyValueStorage
 import com.example.securestoragelab.data.repository.SecureStorageRepositoryImpl
 import com.example.securestoragelab.data.sharedprefs.SharedPrefsStorage
 import com.example.securestoragelab.data.sql.SQLiteStorage
@@ -12,14 +11,17 @@ import com.example.securestoragelab.data.sql.SqlCipherStorage
 import com.example.securestoragelab.domain.model.StorageMethod
 import com.example.securestoragelab.domain.repository.SecureStorageRepository
 import com.example.securestoragelab.domain.usecase.ClearCredentialsUseCase
+import com.example.securestoragelab.domain.usecase.ClearLargeTextUseCase
 import com.example.securestoragelab.domain.usecase.ClearProfileUseCase
 import com.example.securestoragelab.domain.usecase.ClearSettingsUseCase
 import com.example.securestoragelab.domain.usecase.ClearTokenUseCase
 import com.example.securestoragelab.domain.usecase.LoadCredentialsUseCase
+import com.example.securestoragelab.domain.usecase.LoadLargeTextUseCase
 import com.example.securestoragelab.domain.usecase.LoadProfileUseCase
 import com.example.securestoragelab.domain.usecase.LoadSettingsUseCase
 import com.example.securestoragelab.domain.usecase.LoadTokenUseCase
 import com.example.securestoragelab.domain.usecase.SaveCredentialsUseCase
+import com.example.securestoragelab.domain.usecase.SaveLargeTextUseCase
 import com.example.securestoragelab.domain.usecase.SaveProfileUseCase
 import com.example.securestoragelab.domain.usecase.SaveSettingsUseCase
 import com.example.securestoragelab.domain.usecase.SaveTokenUseCase
@@ -28,7 +30,7 @@ class AppGraph(context: Context) {
 
     private val appContext = context.applicationContext
 
-    // provider выбора метода (его будем дергать из VM)
+    // provider выбора метода
     val methodProvider = MutableStorageMethodProvider(StorageMethod.SHARED_PREFS)
 
     // storage реализации
@@ -68,4 +70,11 @@ class AppGraph(context: Context) {
     val saveSettingsUseCase = SaveSettingsUseCase(secureRepo)
     val loadSettingsUseCase = LoadSettingsUseCase(secureRepo)
     val clearSettingsUseCase = ClearSettingsUseCase(secureRepo)
+
+    val saveLargeTextUseCase = SaveLargeTextUseCase(secureRepo)
+    val loadLargeTextUseCase = LoadLargeTextUseCase(secureRepo)
+    val clearLargeTextUseCase = ClearLargeTextUseCase(secureRepo)
+
+    // utils
+
 }

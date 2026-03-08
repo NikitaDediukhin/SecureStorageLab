@@ -35,6 +35,10 @@ class MainActivity : ComponentActivity() {
                     saveSettings = graph.saveSettingsUseCase,
                     loadSettings = graph.loadSettingsUseCase,
                     clearSettings = graph.clearSettingsUseCase,
+
+                    saveLargeText = graph.saveLargeTextUseCase,
+                    loadLargeText = graph.loadLargeTextUseCase,
+                    clearLargeText = graph.clearLargeTextUseCase
                 ) as T
             }
         })[MainViewModel::class.java]

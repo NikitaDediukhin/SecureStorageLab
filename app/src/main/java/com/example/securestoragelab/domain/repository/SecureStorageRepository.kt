@@ -20,4 +20,8 @@ interface SecureStorageRepository {
     suspend fun saveSettings(settings: Settings)
     suspend fun loadSettings(): Settings?
     suspend fun clearSettings()
+
+    suspend fun saveLargeText(key: String, value: String)
+    suspend fun loadLargeText(key: String): String?
+    suspend fun clearLargeText(key: String)
 }
