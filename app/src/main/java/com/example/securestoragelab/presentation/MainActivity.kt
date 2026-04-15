@@ -38,7 +38,9 @@ class MainActivity : ComponentActivity() {
 
                     saveLargeText = graph.saveLargeTextUseCase,
                     loadLargeText = graph.loadLargeTextUseCase,
-                    clearLargeText = graph.clearLargeTextUseCase
+                    clearLargeText = graph.clearLargeTextUseCase,
+
+                    storageSizeMeasurer = graph.storageSizeMeasurer
                 ) as T
             }
         })[MainViewModel::class.java]

@@ -23,6 +23,7 @@ import com.example.securestoragelab.domain.usecase.SaveLargeTextUseCase
 import com.example.securestoragelab.domain.usecase.SaveProfileUseCase
 import com.example.securestoragelab.domain.usecase.SaveSettingsUseCase
 import com.example.securestoragelab.domain.usecase.SaveTokenUseCase
+import com.example.securestoragelab.domain.utils.StorageSizeMeasurer
 import com.example.securestoragelab.presentation.utils.BenchmarkPayloadFactory
 import com.example.securestoragelab.presentation.utils.BenchmarkRunner
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.system.measureTimeMillis
+import java.util.UUID
 
 class MainViewModel(
     private val methodProvider: MutableStorageMethodProvider,
@@ -52,7 +54,9 @@ class MainViewModel(
 
     private val saveLargeText: SaveLargeTextUseCase,
     private val loadLargeText: LoadLargeTextUseCase,
-    private val clearLargeText: ClearLargeTextUseCase
+    private val clearLargeText: ClearLargeTextUseCase,
+
+    private val storageSizeMeasurer: StorageSizeMeasurer
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MainUiState())
@@ -60,7 +64,15 @@ class MainViewModel(
 
     fun onMethodChange(method: StorageMethod) {
         methodProvider.set(method)
-        _state.update { it.copy(method = method, status = "", error = null) }
+        val size = storageSizeMeasurer.getCurrentSizeBytes(method)
+        _state.update {
+            it.copy(
+                method = method,
+                status = "",
+                error = null,
+                currentStorageSizeBytes = size
+            )
+        }
     }
 
     fun onScenarioChange(scenario: Scenario) {
@@ -90,6 +102,8 @@ class MainViewModel(
                 saveSettings(Settings(s.theme, s.biometrics))
 
             Scenario.S5_LARGE_TEXT -> TODO()
+            Scenario.S6_SIZE_BENCHMARK -> TODO()
+            Scenario.S7_COLD_START -> TODO()
         }
     }
 
@@ -109,6 +123,8 @@ class MainViewModel(
                 v?.let { "theme=${it.theme}, biometrics=${it.biometrics}" } ?: "null"
             }
             Scenario.S5_LARGE_TEXT -> "TODO: LoadAll"
+            Scenario.S6_SIZE_BENCHMARK -> TODO()
+            Scenario.S7_COLD_START -> TODO()
         }
         _state.update { it.copy(lastRead = text) }
     }
@@ -120,6 +136,8 @@ class MainViewModel(
             Scenario.S3_PROFILE -> clearProfile()
             Scenario.S4_SETTINGS -> clearSettings()
             Scenario.S5_LARGE_TEXT -> Unit
+            Scenario.S6_SIZE_BENCHMARK -> Unit
+            Scenario.S7_COLD_START -> Unit
         }
     }
 
@@ -128,12 +146,21 @@ class MainViewModel(
         viewModelScope.launch {
             try {
                 val time = measureTimeMillis { block(snapshot) }
-                _state.update { it.copy(status = "$name in ${time}ms", error = null) }
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
+                _state.update {
+                    it.copy(
+                        status = "$name in ${time}ms",
+                        error = null,
+                        currentStorageSizeBytes = size
+                    )
+                }
             } catch (t: Throwable) {
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
                 _state.update {
                     it.copy(
                         status = "$name failed",
-                        error = t.message ?: t.toString()
+                        error = t.message ?: t.toString(),
+                        currentStorageSizeBytes = size
                     )
                 }
             }
@@ -145,8 +172,8 @@ class MainViewModel(
             try {
                 val warmup = 3
                 val runs = 10
-                val keysCount = 40 // начни с 50, потом 200
-                val valueSize = 10_000   // можно 10_000 / 50_000
+                val keysCount = 40
+                val valueSize = 10_000
                 val payload = BenchmarkPayloadFactory.buildString(valueSize)
 
                 val keys = List(keysCount) { i -> "large_$i" }
@@ -192,6 +219,176 @@ class MainViewModel(
                 }
             } catch (t: Throwable) {
                 _state.update { it.copy(status = "Benchmark failed", error = t.message ?: t.toString()) }
+            }
+        }
+    }
+
+    fun runSizeBenchmark(keysCount: Int) {
+        viewModelScope.launch {
+            try {
+
+                require(keysCount > 0)
+
+                val valueSize = 256 * 1024
+                val payload = BenchmarkPayloadFactory.buildString(valueSize)
+
+                val time = measureTimeMillis {
+
+                    repeat(keysCount) { index ->
+                        saveLargeText("size_$index", payload)
+                    }
+
+                }
+
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
+
+                _state.update {
+                    it.copy(
+                        status = "Written $keysCount keys in ${time}ms",
+                        currentStorageSizeBytes = size,
+                        error = null
+                    )
+                }
+
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(
+                        status = "Size benchmark failed",
+                        error = t.message ?: t.toString()
+                    )
+                }
+            }
+        }
+    }
+
+    fun prepareColdStartData(keysCount: Int, valueSizeKb: Int = 256) {
+        viewModelScope.launch {
+            try {
+                require(keysCount > 0) { "keysCount must be > 0" }
+                require(valueSizeKb > 0) { "valueSizeKb must be > 0" }
+
+                val payload = BenchmarkPayloadFactory.buildString(valueSizeKb * 1024)
+
+                val time = measureTimeMillis {
+                    repeat(keysCount) {
+                        val key = "append_${UUID.randomUUID()}"
+                        saveLargeText(key, payload)
+                    }
+                }
+
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
+
+                _state.update {
+                    it.copy(
+                        status = "Append benchmark: +$keysCount keys, value=${valueSizeKb}KB, time=${time}ms",
+                        currentStorageSizeBytes = size,
+                        error = null
+                    )
+                }
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(
+                        status = "Append benchmark failed",
+                        error = t.message ?: t.toString()
+                    )
+                }
+            }
+        }
+    }
+
+    fun prepareColdWriteStorage() {
+        viewModelScope.launch {
+            try {
+                val time = measureTimeMillis {
+                    saveLargeText("warmup_key", "init")
+                }
+
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
+
+                _state.update {
+                    it.copy(
+                        status = "Cold write storage prepared in ${time}ms",
+                        currentStorageSizeBytes = size,
+                        error = null
+                    )
+                }
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(
+                        status = "Prepare cold write failed",
+                        error = t.message ?: t.toString()
+                    )
+                }
+            }
+        }
+    }
+
+    fun runColdStartRead(keysCount: Int) {
+        viewModelScope.launch {
+            try {
+                require(keysCount > 0) { "keysCount must be > 0" }
+
+                val time = measureTimeMillis {
+                    var totalLen = 0
+                    repeat(keysCount) { index ->
+                        totalLen += (loadLargeText("cold_$index")?.length ?: 0)
+                    }
+
+                    _state.update {
+                        it.copy(lastRead = "cold totalLen=$totalLen")
+                    }
+                }
+
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
+
+                _state.update {
+                    it.copy(
+                        status = "Cold start read: keys=$keysCount, firstRead=${time}ms",
+                        currentStorageSizeBytes = size,
+                        error = null
+                    )
+                }
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(
+                        status = "Cold start read failed",
+                        error = t.message ?: t.toString()
+                    )
+                }
+            }
+        }
+    }
+
+    fun runColdStartWrite(keysCount: Int) {
+        viewModelScope.launch {
+            try {
+                require(keysCount > 0) { "keysCount must be > 0" }
+
+                val valueSizeBytes = 256 * 1024
+                val payload = BenchmarkPayloadFactory.buildString(valueSizeBytes)
+
+                val time = measureTimeMillis {
+                    repeat(keysCount) { index ->
+                        saveLargeText("cold_write_$index", payload)
+                    }
+                }
+
+                val size = storageSizeMeasurer.getCurrentSizeBytes(_state.value.method)
+
+                _state.update {
+                    it.copy(
+                        status = "Cold start write: keys=$keysCount, firstWrite=${time}ms",
+                        currentStorageSizeBytes = size,
+                        error = null
+                    )
+                }
+            } catch (t: Throwable) {
+                _state.update {
+                    it.copy(
+                        status = "Cold start write failed",
+                        error = t.message ?: t.toString()
+                    )
+                }
             }
         }
     }

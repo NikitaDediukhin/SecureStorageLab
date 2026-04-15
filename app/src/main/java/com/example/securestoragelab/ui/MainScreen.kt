@@ -1,14 +1,17 @@
 package com.example.securestoragelab.ui
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.securestoragelab.domain.model.StorageMethod
 import com.example.securestoragelab.presentation.MainViewModel
 import com.example.securestoragelab.presentation.Scenario
 
+@SuppressLint("DefaultLocale")
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun MainScreen(vm: MainViewModel) {
@@ -52,7 +55,7 @@ fun MainScreen(vm: MainViewModel) {
         }
 
         // Scenario switch
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = state.scenario == Scenario.S1_CREDENTIALS,
                 onClick = { vm.onScenarioChange(Scenario.S1_CREDENTIALS) },
@@ -77,6 +80,16 @@ fun MainScreen(vm: MainViewModel) {
                 selected = state.scenario == Scenario.S5_LARGE_TEXT,
                 onClick = { vm.onScenarioChange(Scenario.S5_LARGE_TEXT) },
                 label = { Text("S5") }
+            )
+            FilterChip(
+                selected = state.scenario == Scenario.S6_SIZE_BENCHMARK,
+                onClick = { vm.onScenarioChange(Scenario.S6_SIZE_BENCHMARK) },
+                label = { Text("S6") }
+            )
+            FilterChip(
+                selected = state.scenario == Scenario.S7_COLD_START,
+                onClick = { vm.onScenarioChange(Scenario.S7_COLD_START) },
+                label = { Text("S7") }
             )
         }
 
@@ -143,6 +156,99 @@ fun MainScreen(vm: MainViewModel) {
 
             Scenario.S5_LARGE_TEXT -> {
                 OutlinedButton(onClick = vm::onBenchmarkClick) { Text("Benchmark") }
+            }
+
+            Scenario.S6_SIZE_BENCHMARK -> {
+                var keysInput by rememberSaveable { mutableStateOf("10") }
+
+                OutlinedTextField(
+                    value = keysInput,
+                    onValueChange = { keysInput = it.filter(Char::isDigit) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Keys count") }
+                )
+
+                Text("Value size: 2000 KB")
+
+                Button(
+                    onClick = {
+                        val count = keysInput.toIntOrNull()
+                        if (count != null) {
+                            vm.runSizeBenchmark(count)
+                        }
+                    }
+                ) {
+                    Text("Run size benchmark")
+                }
+
+                Text(
+                    text = "Current storage size: ${
+                        String.format("%.2f", state.currentStorageSizeBytes / 1024.0)
+                    } KB"
+                )
+            }
+
+            Scenario.S7_COLD_START -> {
+                var keysInput by rememberSaveable { mutableStateOf("10") }
+
+                OutlinedTextField(
+                    value = keysInput,
+                    onValueChange = { keysInput = it.filter(Char::isDigit) },
+                    modifier = Modifier.fillMaxWidth(),
+                    label = { Text("Keys count") }
+                )
+
+                Text("Value size: 2000 KB")
+
+                Button(
+                    onClick = {
+                        val count = keysInput.toIntOrNull()
+                        if (count != null) {
+                            vm.prepareColdStartData(count)
+                        }
+                    }
+                ) {
+                    Text("Prepare storage with data")
+                }
+
+                Button(
+                    onClick = {
+                        val count = keysInput.toIntOrNull()
+                        if (count != null) {
+                            vm.prepareColdWriteStorage()
+                        }
+                    }
+                ) {
+                    Text("Prepare storage")
+                }
+
+                Button(
+                    onClick = {
+                        val count = keysInput.toIntOrNull()
+                        if (count != null) {
+                            vm.runColdStartRead(count)
+                        }
+                    }
+                ) {
+                    Text("Run cold start test (read)")
+                }
+
+                Button(
+                    onClick = {
+                        val count = keysInput.toIntOrNull()
+                        if (count != null) {
+                            vm.runColdStartWrite(count)
+                        }
+                    }
+                ) {
+                    Text("Run cold start (write) test")
+                }
+
+                Text(
+                    text = "Current storage size: ${
+                        String.format("%.2f", state.currentStorageSizeBytes / 1024.0)
+                    } KB"
+                )
             }
         }
 

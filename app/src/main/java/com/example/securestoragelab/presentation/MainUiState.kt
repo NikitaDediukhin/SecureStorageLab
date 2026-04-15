@@ -21,6 +21,10 @@ data class MainUiState(
     val theme: String = "dark",
     val biometrics: Boolean = true,
 
+    // S6
+    val currentStorageSizeBytes: Long = 0L,
+    val sizeBenchmarkReport: String = "",
+
     // Result
     val lastRead: String = "—",
     val status: String = "",

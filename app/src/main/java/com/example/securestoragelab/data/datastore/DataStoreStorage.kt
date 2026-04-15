@@ -43,7 +43,6 @@ class DataStoreStorage(private val context: Context) : KeyValueStorage {
 
     override suspend fun remove(key: String) {
         withContext(Dispatchers.IO) {
-            // Удалять нужно и string, и boolean возможные значения (потому что тип ключа заранее неизвестен)
             val sKey = stringPreferencesKey(key)
             val bKey = booleanPreferencesKey(key)
 

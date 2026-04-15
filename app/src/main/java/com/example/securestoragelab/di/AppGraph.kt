@@ -8,6 +8,7 @@ import com.example.securestoragelab.data.repository.SecureStorageRepositoryImpl
 import com.example.securestoragelab.data.sharedprefs.SharedPrefsStorage
 import com.example.securestoragelab.data.sql.SQLiteStorage
 import com.example.securestoragelab.data.sql.SqlCipherStorage
+import com.example.securestoragelab.data.utils.StorageSizeMeasurerImpl
 import com.example.securestoragelab.domain.model.StorageMethod
 import com.example.securestoragelab.domain.repository.SecureStorageRepository
 import com.example.securestoragelab.domain.usecase.ClearCredentialsUseCase
@@ -25,6 +26,7 @@ import com.example.securestoragelab.domain.usecase.SaveLargeTextUseCase
 import com.example.securestoragelab.domain.usecase.SaveProfileUseCase
 import com.example.securestoragelab.domain.usecase.SaveSettingsUseCase
 import com.example.securestoragelab.domain.usecase.SaveTokenUseCase
+import com.example.securestoragelab.domain.utils.StorageSizeMeasurer
 
 class AppGraph(context: Context) {
 
@@ -76,5 +78,5 @@ class AppGraph(context: Context) {
     val clearLargeTextUseCase = ClearLargeTextUseCase(secureRepo)
 
     // utils
-
+    val storageSizeMeasurer: StorageSizeMeasurer = StorageSizeMeasurerImpl(appContext)
 }
