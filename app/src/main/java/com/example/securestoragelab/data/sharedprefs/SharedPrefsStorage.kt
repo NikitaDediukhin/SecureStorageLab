@@ -5,25 +5,35 @@ import com.example.securestoragelab.data.repository.KeyValueStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.core.content.edit
+import com.example.securestoragelab.domain.utils.CryptoEngine
 
-class SharedPrefsStorage(context: Context) : KeyValueStorage {
+class SharedPrefsStorage(
+    context: Context,
+    private val cryptoEngine: CryptoEngine
+) : KeyValueStorage {
 
     private val prefs = context.getSharedPreferences("storage_bench", Context.MODE_PRIVATE)
 
     override suspend fun putString(key: String, value: String) = withContext(Dispatchers.IO) {
-        prefs.edit(commit = true) { putString(key, value) }
+        val encrypted = cryptoEngine.encrypt(value)
+        prefs.edit(commit = true) { putString(key, encrypted) }
     }
 
     override suspend fun getString(key: String): String? = withContext(Dispatchers.IO) {
-        prefs.getString(key, null)
+        val encrypted = prefs.getString(key, null) ?: return@withContext null
+        runCatching { cryptoEngine.decrypt(encrypted) }.getOrNull()
     }
 
     override suspend fun putBoolean(key: String, value: Boolean) = withContext(Dispatchers.IO) {
-        prefs.edit(commit = true) { putBoolean(key, value) }
+        val encrypted = cryptoEngine.encrypt(value.toString())
+        prefs.edit(commit = true) { putString(key, encrypted) }
     }
 
     override suspend fun getBoolean(key: String): Boolean? = withContext(Dispatchers.IO) {
-        if (prefs.contains(key)) prefs.getBoolean(key, false) else null
+        val encrypted = prefs.getString(key, null) ?: return@withContext null
+        runCatching {
+            cryptoEngine.decrypt(encrypted).toBooleanStrictOrNull()
+        }.getOrNull()
     }
 
     override suspend fun remove(key: String) = withContext(Dispatchers.IO) {

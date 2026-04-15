@@ -8,6 +8,7 @@ import com.example.securestoragelab.data.repository.SecureStorageRepositoryImpl
 import com.example.securestoragelab.data.sharedprefs.SharedPrefsStorage
 import com.example.securestoragelab.data.sql.SQLiteStorage
 import com.example.securestoragelab.data.sql.SqlCipherStorage
+import com.example.securestoragelab.data.utils.AeadCryptoEngine
 import com.example.securestoragelab.data.utils.StorageSizeMeasurerImpl
 import com.example.securestoragelab.domain.model.StorageMethod
 import com.example.securestoragelab.domain.repository.SecureStorageRepository
@@ -26,6 +27,7 @@ import com.example.securestoragelab.domain.usecase.SaveLargeTextUseCase
 import com.example.securestoragelab.domain.usecase.SaveProfileUseCase
 import com.example.securestoragelab.domain.usecase.SaveSettingsUseCase
 import com.example.securestoragelab.domain.usecase.SaveTokenUseCase
+import com.example.securestoragelab.domain.utils.CryptoEngine
 import com.example.securestoragelab.domain.utils.StorageSizeMeasurer
 
 class AppGraph(context: Context) {
@@ -35,8 +37,13 @@ class AppGraph(context: Context) {
     // provider выбора метода
     val methodProvider = MutableStorageMethodProvider(StorageMethod.SHARED_PREFS)
 
+    // шифрование
+    private val cryptoEngine: CryptoEngine by lazy {
+        AeadCryptoEngine(context)
+    }
+
     // storage реализации
-    private val spStorage = SharedPrefsStorage(appContext)
+    private val spStorage = SharedPrefsStorage(appContext, cryptoEngine)
     private val dsStorage = DataStoreStorage(appContext)
     private val espStorage = EncryptedSharedPrefsStorage(appContext)
     private val sqliteStorage = SQLiteStorage(appContext)
