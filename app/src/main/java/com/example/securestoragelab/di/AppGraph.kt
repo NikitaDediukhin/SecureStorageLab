@@ -39,12 +39,12 @@ class AppGraph(context: Context) {
 
     // шифрование
     private val cryptoEngine: CryptoEngine by lazy {
-        AeadCryptoEngine(context)
+        AeadCryptoEngine(appContext)
     }
 
     // storage реализации
     private val spStorage = SharedPrefsStorage(appContext, cryptoEngine)
-    private val dsStorage = DataStoreStorage(appContext)
+    private val dsStorage = DataStoreStorage(appContext, cryptoEngine)
     private val espStorage = EncryptedSharedPrefsStorage(appContext)
     private val sqliteStorage = SQLiteStorage(appContext)
 
